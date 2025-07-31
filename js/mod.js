@@ -13,11 +13,14 @@ let modInfo = {
 
 // Set your version in num and name
 let VERSION = {
-	num: "10.5",
+	num: "12",
 	name: "",
 }
 
 let changelog = `<h1>Changelog:</h1><br>
+	<h3>v12</h3><br>
+		- Added 1 Layer<br>
+                - Endgame: 12 points<br>
 	<h3>v10.5</h3><br>
 		- Added 3 Layers<br>
                 - Endgame: 10.5 points<br>
@@ -44,9 +47,13 @@ function canGenPoints(){
 	return true
 }
 
+function getPointBase(){
+    if(player.h.challenges[11]>=5)return new Decimal(2).add(40/player.h.challenges[11]);
+    return new Decimal(10);
+}
 // Calculate points/sec!
 function getPointGen() {
-	let gain = getRealPoints().add(getRealPointGen()).log10().log2().div(inChallenge("h",11)?2:1).sub(player.points);
+	let gain = getRealPoints().add(getRealPointGen()).log(getPointBase()).log2().div(inChallenge("h",11)?2:1).sub(player.points);
 	return gain
 }
 
@@ -67,11 +74,11 @@ function getRealPointGen() {
 }
 
 function getRealPoints() {
-	return Decimal.pow(10,Decimal.pow(2,player.points.mul(inChallenge("h",11)?2:1)));
+	return Decimal.pow(getPointBase(),Decimal.pow(2,player.points.mul(inChallenge("h",11)?2:1)));
 }
 
 function setRealPoints(s){
-	player.points=s.log10().log2().div(inChallenge("h",11)?2:1);
+	player.points=s.log(getPointBase()).log2().div(inChallenge("h",11)?2:1);
 }
 // You can add non-layer related variables that should to into "player" and be saved here, along with default values
 function addedPlayerData() { return {
@@ -84,7 +91,7 @@ var displayThings = [
 
 // Determines when the game "ends"
 function isEndgame() {
-	return player.points.gte(new Decimal(10.5))
+	return player.points.gte(new Decimal(12))
 }
 
 
