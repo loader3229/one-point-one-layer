@@ -1505,8 +1505,6 @@ addLayer("q", {
 				},
 				effectDisplay() { return "H: "+format(tmp.q.upgrades[14].effect.h)+"x, Q: "+format(tmp.q.upgrades[14].effect.q)+"x" },
 			},
-
-
         },
 });
 
@@ -1865,7 +1863,6 @@ tabFormat: ["main-display",
 				currencyLayer: "ss",
 				unlocked() { return hasUpgrade("ss", 21)&&player.o.unlocked },
 			},
-
         },
 });
 
@@ -1912,7 +1909,7 @@ addLayer("o", {
         },
         row: 3, // Row the layer is in on the tree (0 is the first row)
         hotkeys: [
-            {key: "o", description: "Press O to Solarity Reset", onPress(){if (canReset(this.layer)) doReset(this.layer)}},
+            {key: "o", description: "O: Reset for solarity", onPress(){if (canReset(this.layer)) doReset(this.layer)}},
         ],
         doReset(resettingLayer){ 
 			let keep = [];
@@ -1980,9 +1977,6 @@ addLayer("o", {
                     player.o.points = new Decimal(0);
 					player.o.buyables[this.id] = player.o.buyables[this.id].plus(tmp[this.layer].buyables[this.id].gain);
                 },
-                buyMax() {
-					// I'll do this later ehehe
-				},
                 style: {'height':'140px', 'width':'140px'},
 			},
 			12: {
@@ -2004,11 +1998,7 @@ addLayer("o", {
 					player.o.energy = new Decimal(0);
 					player.o.buyables[this.id] = player.o.buyables[this.id].plus(tmp[this.layer].buyables[this.id].gain);
                 },
-                buyMax() {
-					// I'll do this later ehehe
-				},
                 style: {'height':'140px', 'width':'140px', 'font-size':'9px'},
 			},
-
         },
 });
