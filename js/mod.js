@@ -13,11 +13,14 @@ let modInfo = {
 
 // Set your version in num and name
 let VERSION = {
-	num: "13",
-	name: "",
+	num: "14",
+	name: "Balance Energy",
 }
 
 let changelog = `<h1>Changelog:</h1><br>
+	<h3>v14</h3><br>
+		- Added Balance Energy<br>
+                - Endgame: 14 points<br>
 	<h3>v13</h3><br>
 		- Added Solarity<br>
                 - Endgame: 13 points<br>
@@ -94,7 +97,7 @@ var displayThings = [
 
 // Determines when the game "ends"
 function isEndgame() {
-	return player.points.gte(new Decimal(13))
+	return player.points.gte(new Decimal(14))
 }
 
 
