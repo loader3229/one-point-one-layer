@@ -5,19 +5,22 @@ let modInfo = {
 	pointsName: "points",
 	modFiles: ["layers.js", "tree.js"],
 
-	discordName: "",
-	discordLink: "",
+	discordName: "loader3229's Discord Server",
+	discordLink: "https://discord.gg/jztUReQ2vT",
 	initialStartPoints: new Decimal (1), // Used for hard resets and new players
 	offlineLimit: 1,  // In hours
 }
 
 // Set your version in num and name
 let VERSION = {
-	num: "14",
-	name: "Balance Energy",
+	num: "15",
+	name: "Magic",
 }
 
 let changelog = `<h1>Changelog:</h1><br>
+	<h3>v15</h3><br>
+		- Added Magic<br>
+                - Endgame: 15 points<br>
 	<h3>v14</h3><br>
 		- Added Balance Energy<br>
                 - Endgame: 14 points<br>
@@ -92,12 +95,15 @@ function addedPlayerData() { return {
 
 // Display extra things at the top of the page
 var displayThings = [
+	"Mod Author: loader3229",
+	"Endgame: "+VERSION.num+" points",
 	function(){return "Point Gain: "+format(getRealPointGen())+"x"},
+	function(){return "Progress: "+format(player.points.mul(100).div(VERSION.num))+"%"},
 ]
 
 // Determines when the game "ends"
 function isEndgame() {
-	return player.points.gte(new Decimal(14))
+	return player.points.gte(new Decimal(VERSION.num))
 }
 
 
