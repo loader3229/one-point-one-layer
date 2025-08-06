@@ -13,11 +13,14 @@ let modInfo = {
 
 // Set your version in num and name
 let VERSION = {
-	num: "15",
-	name: "Magic",
+	num: "16.5",
+	name: "Super Points",
 }
 
 let changelog = `<h1>Changelog:</h1><br>
+	<h3>v16.5</h3><br>
+		- Added Phantom Souls and Super Points<br>
+                - Endgame: 16.5 points<br>
 	<h3>v15</h3><br>
 		- Added Magic<br>
                 - Endgame: 15 points<br>
