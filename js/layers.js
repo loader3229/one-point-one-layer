@@ -3175,7 +3175,7 @@ let cost = Decimal.pow(x.div(8).add(1),4).mul(1400).floor();
                     Effect: Multiply Damned Soul gain & effect exponent by "+format(data.effect);
                     return display;
                 },
-                unlocked() { return hasMilestone("sp",1) }, 
+                unlocked() { return hasMilestone("sp",5) }, 
                 canAfford() {
                     return player.ps.souls.gte(tmp[this.layer].buyables[this.id].cost)},
                 buy() { 
