@@ -4524,6 +4524,12 @@ addLayer("ge", {
     requires: function(){
 		return new Decimal(1e168);
 	},
+		nodeStyle() { return {
+            "background": ((((player.ge.unlocked||canReset("ge"))))?("radial-gradient(circle, #bfbfbf 0%, #838586 100%)"):"#bf8f8f") ,
+		}},
+		componentStyles: {
+            "prestige-button"() {return { "background": (canReset("ge"))?("radial-gradient(circle, #bfbfbf 0%, #838586 100%)"):"#bf8f8f" }},
+		},
     resource: "gears",
     baseResource: "solar energy", 
     baseAmount() {return player.o.energy},
@@ -4615,3 +4621,4 @@ addLayer("ge", {
             },
     }
 });
+
