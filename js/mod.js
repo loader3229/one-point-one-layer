@@ -94,6 +94,7 @@ function getRealPointGen() {
 	gain = gain.mul(layers.s.buyables[11].effect());
 	if (player.q.unlocked) gain = gain.mul(tmp.q.enEff);
 	if (player.h.unlocked) gain = gain.mul(layers.h.effect());
+    if(hasUpgrade("ss",43))gain = gain.pow(1.01);
 	return gain
 }
 
