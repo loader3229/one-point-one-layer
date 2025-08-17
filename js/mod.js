@@ -81,6 +81,7 @@ function getPointBase(){
 // Calculate points/sec!
 function getPointGen() {
 	let gain = getRealPoints().add(getRealPointGen()).log(getPointBase()).log2().div(inChallenge("h",11)?2:1).sub(player.points);
+    if(inChallenge("h",52))gain = getRealPoints().add(getRealPointGen()).log(getPointBase()).log2().div(inChallenge("h",11)?2:1).add(1).log2().sub(player.points);
 	return gain
 }
 
@@ -102,11 +103,13 @@ function getRealPointGen() {
 }
 
 function getRealPoints() {
+    if(inChallenge("h",52))return Decimal.pow(getPointBase(),Decimal.pow(2,Decimal.pow(2,player.points).sub(1).mul(inChallenge("h",11)?2:1)));
 	return Decimal.pow(getPointBase(),Decimal.pow(2,player.points.mul(inChallenge("h",11)?2:1)));
 }
 
 function setRealPoints(s){
 	player.points=s.log(getPointBase()).log2().div(inChallenge("h",11)?2:1);
+    if(inChallenge("h",52))player.points=player.points.add(1).log2();
 }
 // You can add non-layer related variables that should to into "player" and be saved here, along with default values
 function addedPlayerData() { return {

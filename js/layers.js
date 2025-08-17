@@ -157,7 +157,7 @@ addLayer("p", {
             33: {
                 title: "Column Leader",
                 description: "Both above upgrades are stronger based on your Total Prestige Points.",
-                effect() { return player.p.total.plus(1).log10().plus(1).log10().div(hasUpgrade("p",14)?1:5).mul(player.ma.points.gte(1)?(player.points.div(20).max(1)):1).mul(hasUpgrade("sp",33)?upgradeEffect("sp",33):1).plus(1) },
+                effect() { return player.p.total.plus(1).log10().plus(1).log10().div(hasUpgrade("p",14)?(hasUpgrade("sp",14)?0.9:1):5).mul(player.ma.points.gte(1)?(player.points.div(20).max(1)):1).mul(hasUpgrade("sp",33)?upgradeEffect("sp",33):1).plus(1) },
                 cost() { return new Decimal(1e53); },
                 unlocked() { return hasUpgrade("p", 32) },
                 effectDisplay() { return "^"+format(tmp.p.upgrades[33].effect) },
@@ -230,7 +230,8 @@ addLayer("b", {
         type: "static", // normal: cost to gain currency depends on amount gained. static: cost depends on how much you already have
         branches: ["p"],
         exponent() {
-            if(player.h.challenges[12]>=19.4)return Math.max(1.211/Math.sqrt(player.h.challenges[12]),0.25);
+            if(player.h.challenges[12]>=20.92)return Math.max(1.225/Math.sqrt(player.h.challenges[12]),0.25);
+            if(player.h.challenges[12]>=19.4)return Math.max(1.211/Math.sqrt(player.h.challenges[12]),0.268);
             if(player.h.challenges[12]>=18.1)return Math.max(5.08/player.h.challenges[12],0.275);
             if(player.h.challenges[12]>=16)return 5/Math.min(player.h.challenges[12],17.8);
             if(player.h.challenges[12]>=9)return 4.5/Math.min(player.h.challenges[12],14);
@@ -241,6 +242,7 @@ addLayer("b", {
             if(hasUpgrade("b",23))ret-=0.01;
             if(hasMilestone("h",2))ret-=0.02;
             if(hasMilestone("h",20))ret-=0.005;
+            if(hasMilestone("h",40))ret-=0.005;
             if(hasMilestone("sp",8))ret-=0.01;
             if(hasUpgrade("q",33))ret-=0.005;
             if(hasUpgrade("p",43))ret-=0.01;
@@ -285,6 +287,7 @@ addLayer("b", {
             if (player.m.unlocked) base = base.times(buyableEffect("m", 11));
             if (hasUpgrade("s",14)&&hasMilestone("hs",1)) base = base.times(buyableEffect("s", 13));
             if (hasUpgrade("b", 24)) base = base.times(upgradeEffect("b", 24));
+            if (hasUpgrade("b", 34)) base = base.times(upgradeEffect("b", 34));
             return base;
         },
         effect() {
@@ -411,6 +414,14 @@ addLayer("b", {
                 cost() { return new Decimal(45) },
                 unlocked() { return player.sb.unlocked },
             },
+			34: {
+				title: "Anti-Metric",
+				description: "Imperium Bricks multiply Booster base.",
+                cost() { return new Decimal(10000) },
+                unlocked() { return player.ma.points.gte(2) },
+				effect() { return player.i.points.plus(1) },
+				effectDisplay() { return format(tmp[this.layer].upgrades[this.id].effect)+"x" },
+			},
         },
         marked: function(){return player.ma.points.gte(2)}
 })
@@ -432,7 +443,8 @@ addLayer("g", {
         type: "static", // normal: cost to gain currency depends on amount gained. static: cost depends on how much you already have
         branches: ["p"],
         exponent() {
-            if(player.h.challenges[12]>=19.4)return Math.max(1.211/Math.sqrt(player.h.challenges[12]),0.25);
+            if(player.h.challenges[12]>=20.92)return Math.max(1.225/Math.sqrt(player.h.challenges[12]),0.25);
+            if(player.h.challenges[12]>=19.4)return Math.max(1.211/Math.sqrt(player.h.challenges[12]),0.268);
             if(player.h.challenges[12]>=18.1)return Math.max(5.08/player.h.challenges[12],0.275);
             if(player.h.challenges[12]>=16)return 5/Math.min(player.h.challenges[12],17.8);
             if(player.h.challenges[12]>=9)return 4.5/Math.min(player.h.challenges[12],14);
@@ -673,7 +685,7 @@ addLayer("t", {
         branches: ["b"],
         exponent() { 
             a=0.75;
-            if(player.h.challenges[22]>=19.63)a=9.2/player.h.challenges[22];
+            if(player.h.challenges[22]>=19.63)a=Math.min(9.2/player.h.challenges[22],0.4279);
             else if(player.h.challenges[22]>=10.5)a=a*10/Math.min(player.h.challenges[22],16);
             if(hasUpgrade("q",31))a=a/(player.q.buyables[11].add(1).log10().mul(0.01).toNumber()+1);
             return a;
@@ -967,7 +979,7 @@ addLayer("s", {
         branches: ["g"],
         exponent() { 
             a=0.75;
-            if(player.h.challenges[22]>=19.63)a=9.2/player.h.challenges[22];
+            if(player.h.challenges[22]>=19.63)a=Math.min(9.2/player.h.challenges[22],0.4279);
             else if(player.h.challenges[22]>=10.5)a=a*10/Math.min(player.h.challenges[22],16);
             if(hasUpgrade("q",31))a=a/(player.q.buyables[11].add(1).log10().mul(0.01).toNumber()+1);
             return a;
@@ -1220,6 +1232,35 @@ addLayer("s", {
                 buyMax() {}, // You'll have to handle this yourself if you want
                 style: {'height':'120px','width':'120px'},
             },
+            23: {
+                cost(x=player[this.layer].buyables[this.id]) { // cost for buying xth buyable, can be an object if there are multiple currencies
+                    let cost = Decimal.pow(1e100,Decimal.pow(x,1.35)).pow(hasUpgrade("p",42)?0.95:1)
+                    return cost
+                },
+                effect(x=player[this.layer].buyables[this.id]) { // Effects of owning x of the items, x is a decimal
+                    if(player.i.buyables[11].lt(3))return new Decimal(1);
+                    let eff = player.s.points.mul(layers.ss.eff1()).add(1).log10().mul(x.add(hasUpgrade("s",11)?1:0).add(hasUpgrade("s",22)?upgradeEffect("s",22):0).add(hasUpgrade("ss",31)?upgradeEffect("ss",31):0).mul(hasUpgrade("s",21)?1.08:1).add(1).log10()).add(1);
+                    return eff;
+                },
+                display() { // Everything else displayed in the buyable button after the title
+                    let data = tmp[this.layer].buyables[this.id]
+                    return "Space Building 8\n\
+                    Cost: " + format(data.cost) + " Generator Power\n\
+                    Level: " + format(player[this.layer].buyables[this.id]) + "\n"+
+                    "Currently: Multiply Hyperspace Energy gain by "+format(data.effect)+". (Boosted by your Space Energy)";
+                },
+                unlocked() { return player.i.buyables[11].gte(3) }, 
+                canAfford() {
+                    return player.g.power.gte(tmp[this.layer].buyables[this.id].cost)
+                },
+                buy() { 
+                    cost = tmp[this.layer].buyables[this.id].cost
+                    player.g.power = player.g.power.sub(cost)    
+                    player[this.layer].buyables[this.id] = player[this.layer].buyables[this.id].add(1)
+                },
+                buyMax() {}, // You'll have to handle this yourself if you want
+                style: {'height':'120px','width':'120px'},
+            },
     },
     upgrades:{
         rows: 3,
@@ -1310,6 +1351,12 @@ addLayer("s", {
         
         update(diff){
             var pow=player.g.power.pow(hasUpgrade("p",42)?(1/0.95):1);
+          if(player.i.buyables[11].gte(3)){
+             var target=pow.add(1).log(1e100).pow(1/1.35).add(1).floor();
+            if(target.gt(player.s.buyables[23])){
+                player.s.buyables[23]=target;
+            }
+         }
          if(player.i.buyables[11].gte(2)){
              var target=pow.add(1).log(1e60).pow(1/1.35).add(1).floor();
             if(target.gt(player.s.buyables[22])){
@@ -1409,8 +1456,8 @@ addLayer("e", {
             if (layers[resettingLayer].row > this.row) layerDataReset(this.layer, keep)
         },
     upgrades:{
-        rows: 2,
-        cols: 5,
+        rows: 3,
+        cols: 4,
             11: {
                 title: "Row 2 Synergy",
                 description: "Boosters & Generators boost each other.",
@@ -1477,6 +1524,12 @@ addLayer("e", {
                 effect() { return Decimal.pow(1.1, player.b.points.plus(player.g.points).pow(0.5)) },
                 effectDisplay() { return format(tmp.e.upgrades[24].effect)+"x" },
             },
+			31: {
+				title: "Amplification",
+				description: "Enhancer effect is better.",
+                cost() { return new Decimal("1e1400") },
+                unlocked() { return player.ma.points.gte(6) },
+			},
     },
     buyables: {
             rows: 1,
@@ -1497,7 +1550,12 @@ addLayer("e", {
                     eff[0]=x;
                     eff[1]=x;
                     eff[2]=new Decimal(1);
-                    if(hasMilestone("m",7)){
+                    
+                    if(hasUpgrade("e",31)){
+                        eff[0]=eff[0].pow(1.125);
+                        eff[1]=eff[1].pow(1.125);
+                        eff[2]=Decimal.pow(challengeEffect("h",31).mul(buyableEffect("m",22)).mul(2),x);
+                    }else if(hasMilestone("m",7)){
                         eff[0]=eff[0].pow(10/9);
                         eff[1]=eff[1].pow(10/9);
                         eff[2]=Decimal.pow(challengeEffect("h",31).mul(buyableEffect("m",22)).mul(2),x);
@@ -1889,6 +1947,12 @@ addLayer("q", {
                 },
                 effectDisplay() { return "H: "+format(tmp.q.upgrades[14].effect.h)+"x, Q: "+format(tmp.q.upgrades[14].effect.q)+"x" },
             },
+			15: {
+				title: "Quirk Extension",
+				description: "Hindrance Spirit effect based on points is better based on Quirk Energy.",
+                cost() { return new Decimal("1e25255") },
+				unlocked() { return player.ma.points.gte(8) },
+			},
             21: {
                 title: "Quirk City",
                 description: "Super Boosters multiply each Quirk Layer's production.",
@@ -1990,7 +2054,7 @@ addLayer("h", {
         },
         effect() { 
             if(!player.h.unlocked)return new Decimal(1);
-            let eff = player.h.points.times(player.points.add(1)).add(1).pow(2);
+            let eff = player.h.points.times(player.points.add(1).pow(hasUpgrade("q",15)?player.q.energy.add(10).log10().sqrt().add(1):1)).add(1).pow(2);
             return eff;
         },
         effectDescription() {
@@ -2169,7 +2233,7 @@ addLayer("h", {
             },
             34: {
                 requirementDescription: "7.8 points in 7th Challenge",
-                done() { return player.h.challenges[41]>=6.5},
+                done() { return player.h.challenges[41]>=7.8},
                 effectDescription: "7th Challenge Effect is boosted by hindrance spirit.",
             },
             35: {
@@ -2197,6 +2261,14 @@ addLayer("h", {
                 done() { return player.h.challenges[22]>=21},
                 effectDescription: "4th Challenge Effect is boosted by hindrance spirit.",
             },
+            40: {
+                requirementDescription: "21 points in 2nd Challenge",
+                done() { return player.h.challenges[12]>=21},
+                effectDescription: "Boosters are cheaper.",
+            },
+        },
+        getHCBoost(){
+            return player.h.points.add(1).log10().add(1).log10().add(1);
         },
         challenges: {
             rows: 5,
@@ -2210,8 +2282,8 @@ addLayer("h", {
                 completionLimit: Infinity,
                 goalDescription(){return format(player[this.layer].challenges[this.id],4)},
                 rewardEffect(){
-                    let ret=new Decimal(player[this.layer].challenges[this.id]).mul(challengeEffect("h",41)).mul(challengeEffect("h",51));
-                    if(hasMilestone("h",4))ret = ret.mul(player.h.points.add(1).log10().add(1).log10().add(1));
+                    let ret=new Decimal(player[this.layer].challenges[this.id]).mul(challengeEffect("h",41)).mul(challengeEffect("h",51)).mul(challengeEffect("h",52));
+                    if(hasMilestone("h",4) || player.ma.points.gte(9))ret = ret.mul(layers.h.getHCBoost());
                     return ret;
                 },
                 rewardDisplay(){return "+"+format(challengeEffect("h",this.id))}
@@ -2225,8 +2297,8 @@ addLayer("h", {
                 completionLimit: Infinity,
                 goalDescription(){return format(player[this.layer].challenges[this.id],4)},
                 rewardEffect(){
-                    let ret=new Decimal(player[this.layer].challenges[this.id]).mul(challengeEffect("h",42)).mul(challengeEffect("h",51));
-                    if(hasMilestone("h",24))ret = ret.mul(player.h.points.add(1).log10().add(1).log10().add(1));
+                    let ret=new Decimal(player[this.layer].challenges[this.id]).mul(challengeEffect("h",42)).mul(challengeEffect("h",51)).mul(challengeEffect("h",52));
+                    if(hasMilestone("h",24) || player.ma.points.gte(9))ret = ret.mul(layers.h.getHCBoost());
                     if(player[this.layer].challenges[this.id]>=10.7)ret=ret.add(1);
                     return ret;
                 },
@@ -2241,12 +2313,12 @@ addLayer("h", {
                 completionLimit: Infinity,
                 goalDescription(){return format(player[this.layer].challenges[this.id],4)},
                 rewardEffect(){
-                    let ret=new Decimal(player[this.layer].challenges[this.id]).mul(challengeEffect("h",41)).mul(challengeEffect("h",51));
-                    if(hasMilestone("h",26))ret = ret.mul(player.h.points.add(1).log10().add(1).log10().add(1));
+                    let ret=new Decimal(player[this.layer].challenges[this.id]).mul(challengeEffect("h",41)).mul(challengeEffect("h",51)).mul(challengeEffect("h",52));
+                    if(hasMilestone("h",26) || player.ma.points.gte(9))ret = ret.mul(layers.h.getHCBoost());
                     ret = ret.sqrt();
                     if(hasMilestone("h",17)){
-                        ret=new Decimal(player[this.layer].challenges[this.id]).mul(challengeEffect("h",41)).mul(challengeEffect("h",51)).div(15);
-                        if(hasMilestone("h",26))ret = ret.mul(player.h.points.add(1).log10().add(1).log10().add(1));
+                        ret=new Decimal(player[this.layer].challenges[this.id]).mul(challengeEffect("h",41)).mul(challengeEffect("h",51)).mul(challengeEffect("h",52)).div(15);
+                        if(hasMilestone("h",26) || player.ma.points.gte(9))ret = ret.mul(layers.h.getHCBoost());
                         return ret.add(1);
                     }
                     return ret;
@@ -2262,7 +2334,7 @@ addLayer("h", {
                 completionLimit: Infinity,
                 goalDescription(){return format(player[this.layer].challenges[this.id],4)},
                 rewardEffect(){
-                    let ret=new Decimal(player[this.layer].challenges[this.id]).div(10).mul(challengeEffect("h",42)).mul(challengeEffect("h",51));
+                    let ret=new Decimal(player[this.layer].challenges[this.id]).div(10).mul(challengeEffect("h",42)).mul(challengeEffect("h",51)).mul(challengeEffect("h",52));
                     if(hasUpgrade("ss",23)){
                         let mxtime=20000;
                         if(player.m.unlocked)mxtime=25000;
@@ -2273,9 +2345,10 @@ addLayer("h", {
                         if(player.i.unlocked)mxtime=50000;
                         if(player.ma.unlocked)mxtime=55000;
                         if(player.ge.unlocked)mxtime=60000;
+                        if(player.mc.unlocked)mxtime=65000;
                         ret=ret.mul(Math.min(player.timePlayed,mxtime)/(hasMilestone("h",32)?50000:100000)+1);
                     }
-                    if(hasMilestone("h",39))ret = ret.mul(player.h.points.add(1).log10().add(1).log10().add(1));
+                    if(hasMilestone("h",39) || player.ma.points.gte(9))ret = ret.mul(layers.h.getHCBoost());
                     if(hasUpgrade("t",23))ret=ret.add(1);
                     return ret;
                 },
@@ -2290,8 +2363,8 @@ addLayer("h", {
                 completionLimit: Infinity,
                 goalDescription(){return format(player[this.layer].challenges[this.id],4)},
                 rewardEffect(){
-                    let ret=new Decimal(player[this.layer].challenges[this.id]).div(20).mul(challengeEffect("h",41)).mul(challengeEffect("h",51));
-                    if(hasMilestone("h",37))ret = ret.mul(player.h.points.add(1).log10().add(1).log10().add(1));
+                    let ret=new Decimal(player[this.layer].challenges[this.id]).div(20).mul(challengeEffect("h",41)).mul(challengeEffect("h",51)).mul(challengeEffect("h",52));
+                    if(hasMilestone("h",37) || player.ma.points.gte(9))ret = ret.mul(layers.h.getHCBoost());
                     ret = ret.add(1);
                     return ret;
                 },
@@ -2306,7 +2379,9 @@ addLayer("h", {
                 completionLimit: Infinity,
                 goalDescription(){return format(player[this.layer].challenges[this.id],4)},
                 rewardEffect(){
-                    let ret=new Decimal(player[this.layer].challenges[this.id]).div(hasMilestone("h",33)?5:hasMilestone("h",30)?10:hasMilestone("h",23)?20:50).mul(challengeEffect("h",42)).mul(challengeEffect("h",51)).add(1);
+                    let ret=new Decimal(player[this.layer].challenges[this.id]).div(hasMilestone("h",33)?5:hasMilestone("h",30)?10:hasMilestone("h",23)?20:50).mul(challengeEffect("h",42)).mul(challengeEffect("h",51)).mul(challengeEffect("h",52));
+                    if(player.ma.points.gte(9))ret = ret.mul(layers.h.getHCBoost().max(4)).div(4);
+                    ret = ret.add(1);
                     return ret;
                 },
                 rewardDisplay(){return format(challengeEffect("h",this.id))+"x"}
@@ -2320,8 +2395,8 @@ addLayer("h", {
                 completionLimit: Infinity,
                 goalDescription(){return format(player[this.layer].challenges[this.id],4)},
                 rewardEffect(){
-                    let ret=new Decimal(player[this.layer].challenges[this.id]).div(100).mul(challengeEffect("h",51));
-                    if(hasMilestone("h",34))ret = ret.mul(player.h.points.add(1).log10().add(1).log10().add(1));
+                    let ret=new Decimal(player[this.layer].challenges[this.id]).div(100).mul(challengeEffect("h",51)).mul(challengeEffect("h",52));
+                    if(hasMilestone("h",34) || player.ma.points.gte(9))ret = ret.mul(layers.h.getHCBoost());
                     ret = ret.add(1);
                     return ret;
                 },
@@ -2337,8 +2412,8 @@ addLayer("h", {
                 completionLimit: Infinity,
                 goalDescription(){return format(player[this.layer].challenges[this.id],4)},
                 rewardEffect(){
-                    let ret=new Decimal(player[this.layer].challenges[this.id]).div(200).mul(challengeEffect("h",51));
-                    if(hasMilestone("h",36))ret = ret.mul(player.h.points.add(1).log10().add(1).log10().add(1));
+                    let ret=new Decimal(player[this.layer].challenges[this.id]).div(200).mul(challengeEffect("h",51)).mul(challengeEffect("h",52));
+                    if(hasMilestone("h",36) || player.ma.points.gte(9))ret = ret.mul(layers.h.getHCBoost());
                     ret = ret.add(1);
                     return ret;
                 },
@@ -2347,16 +2422,32 @@ addLayer("h", {
             },
             51: {
                 name: "The Reality (9)",
-                challengeDescription: "Left Wing and Right Wing at once.",
+                challengeDescription: "The Last Challenge! Left Wing and Right Wing at once.",
                 unlocked() { return hasMilestone("h",29) },
                 rewardDescription(){return "Effect of all previous 8 challenges are stronger."},
                 canComplete: false,
                 completionLimit: Infinity,
                 goalDescription(){return format(player[this.layer].challenges[this.id],4)},
                 rewardEffect(){
-                    let ret=new Decimal(player[this.layer].challenges[this.id]).div(100);
-                    if(hasMilestone("h",38))ret = ret.mul(player.h.points.add(1).log10().add(1).log10().div(2).add(1));
+                    let ret=new Decimal(player[this.layer].challenges[this.id]).div(100).mul(challengeEffect("h",52));
+                    if(player.ma.points.gte(9))ret = ret.mul(layers.h.getHCBoost());
+                    else if(hasMilestone("h",38))ret = ret.mul(player.h.points.add(1).log10().add(1).log10().div(2).add(1));
                     ret = ret.add(1);
+                    return ret;
+                },
+                rewardDisplay(){return format(challengeEffect("h",this.id))+"x"},
+                countsAs: [11,21,31,12,22,32]
+            },
+            52: {
+                name: "The True Reality (10)",
+                challengeDescription: "THE VERY LAST CHALLENGE! The Reality and your points are log2(points+1) after Halved Points.",
+                unlocked() { return player.ma.points.gte(9) },
+                rewardDescription(){return "Effect of all previous 9 challenges are stronger."},
+                canComplete: false,
+                completionLimit: Infinity,
+                goalDescription(){return format(player[this.layer].challenges[this.id],4)},
+                rewardEffect(){
+                    let ret=new Decimal(player[this.layer].challenges[this.id]).div(200).mul(layers.h.getHCBoost()).add(1);
                     return ret;
                 },
                 rewardDisplay(){return format(challengeEffect("h",this.id))+"x"},
@@ -2373,6 +2464,9 @@ addLayer("h", {
             "Main Tab": {
                 content: [
                     "main-display",
+                    ["display-text",function(){
+                    if(player.ma.points.gte(9))return "Your Hindrance Spirit are boosting all 10 Challenge reward effects by "+format(layers.h.getHCBoost())+"x";
+                    }],
                     "prestige-button",
                     "resource-display",
                     "blank",
@@ -2388,6 +2482,7 @@ addLayer("h", {
             },
         },
         passiveGeneration() { return hasMilestone("ba",5)?1:0 },
+        marked: function(){return player.ma.points.gte(9)}
 });
 
 
@@ -2402,7 +2497,7 @@ addLayer("ss", {
             subspace: new Decimal(0),
         }},
         color: "#e8ffff",
-        requires() { return new Decimal(16) }, // Can be a function that takes requirement increases into account
+        requires() { if(player.ma.points.gte(10))return new Decimal(10);return new Decimal(16) }, // Can be a function that takes requirement increases into account
         roundUpCost: true,
         resource: "subspace energy", // Name of prestige currency
         baseResource: "space energy", // Name of resource prestige is based on
@@ -2475,6 +2570,7 @@ tabFormat: ["main-display",
             if(inChallenge("h", 32))return new Decimal(1);
             let eff=player.ss.subspace.plus(1).log10().plus(1).log10();
             if(hasUpgrade("ss",42))eff=player.ss.subspace.plus(1).log10().root(5);
+            if(player.ma.points.gte(10))eff = eff.pow(1.25);
             if(hasUpgrade("ss",12))eff=eff.mul(upgradeEffect("ss",12));
             if(hasMilestone("l",6))eff=eff.mul(buyableEffect("o",23));
             return eff.add(1);
@@ -2614,6 +2710,7 @@ tabFormat: ["main-display",
         canBuyMax() { return hasMilestone("ba",1) },
         autoPrestige() { return hasMilestone("m",1) },
         resetsNothing() { return hasMilestone("m",1) },
+        marked: function(){return player.ma.points.gte(10)}
 });
 
 
@@ -2692,6 +2789,7 @@ addLayer("o", {
             if(hasMilestone("sp",7))player.o.buyables[21] = player.o.buyables[21].plus(tmp.o.buyables[21].gain.times(diff));
             if(hasMilestone("l",4))player.o.buyables[22] = player.o.buyables[22].plus(tmp.o.buyables[22].gain.times(diff));
             if(hasMilestone("l",6))player.o.buyables[23] = player.o.buyables[23].plus(tmp.o.buyables[23].gain.times(diff));
+            if(hasMilestone("l",9))player.o.buyables[31] = player.o.buyables[31].plus(tmp.o.buyables[31].gain.times(diff));
         },
         solEnEff() { 
             if(inChallenge("h", 32))return new Decimal(1);
@@ -2867,6 +2965,31 @@ addLayer("o", {
 				buy() {
 					player.o.buyables[11] = new Decimal(0);
 					player.o.energy = new Decimal(0);
+					player.o.buyables[this.id] = player.o.buyables[this.id].plus(tmp[this.layer].buyables[this.id].gain);
+				},
+				 buyMax() {
+					// I'll do this later ehehe
+				},
+                style: {'height':'140px', 'width':'140px', 'font-size':'9px'},
+				autoed() { return hasMilestone("m", 0) },
+			},
+			31: {
+				title: "Blueshifted Flares",
+				gain() { return player.o.points.div("1e55").pow(10).floor() },
+				effect() {
+					return player[this.layer].buyables[this.id].plus(1).pow(tmp.o.solPow).log10().plus(1).log10().root(5).div(10).add(1);
+				},
+				display() {
+					let data = tmp[this.layer].buyables[this.id]
+					return ("Sacrifice all of your Solarity for "+formatWhole(data.gain)+" Blueshifted Flares\n"+
+					"Req: 1e55 Solarity\n"+
+					"Amount: "+formatWhole(player[this.layer].buyables[this.id])+"\n"+
+					"Effect: Multiply Spell Effects by "+format(data.effect))
+				},
+				unlocked() { return hasMilestone("l",9) },
+				canAfford() { return player.o.points.gte("1e55") },
+				buy() {
+					player.o.points = new Decimal(0);
 					player.o.buyables[this.id] = player.o.buyables[this.id].plus(tmp[this.layer].buyables[this.id].gain);
 				},
 				 buyMax() {
@@ -3444,7 +3567,7 @@ addLayer("m", {
                 title: "Booster Boost",
                 gain() { return player.m.points },
                 effect() { 
-                    let eff = player[this.layer].buyables[this.id].add(1).log10().add(1);
+                    let eff = player[this.layer].buyables[this.id].add(1).log10().mul(buyableEffect("o",31)).add(1);
                     return eff;
                 },
                 display() { // Everything else displayed in the buyable button after the title
@@ -3463,8 +3586,8 @@ addLayer("m", {
                 title: "Time Reverse",
                 gain() { return player.m.points },
                 effect() { 
-                    let eff = player[this.layer].buyables[this.id].add(1).log10().sqrt().div(10).add(1);
-                    if(hasMilestone("l",3))eff = player[this.layer].buyables[this.id].add(1).log10().div(hasUpgrade("p",44)?15:20).add(1);
+                    let eff = player[this.layer].buyables[this.id].add(1).log10().sqrt().div(10).mul(buyableEffect("o",31)).add(1);
+                    if(hasMilestone("l",3))eff = player[this.layer].buyables[this.id].add(1).log10().div(hasUpgrade("p",44)?Math.max(1,15/buyableEffect("o",31)):20).mul(buyableEffect("o",31)).add(1);
                     return eff;
                 },
                 display() { // Everything else displayed in the buyable button after the title
@@ -3483,7 +3606,7 @@ addLayer("m", {
                 title: "Subspace Extension",
                 gain() { return player.m.points },
                 effect() { 
-                    let eff = player[this.layer].buyables[this.id].add(1).log10().div(hasUpgrade("p",44)?15:20).add(1);
+                    let eff = player[this.layer].buyables[this.id].add(1).log10().div(hasUpgrade("p",44)?Math.max(1,15/buyableEffect("o",31)):20).mul(buyableEffect("o",31)).add(1);
                     return eff;
                 },
                 display() { // Everything else displayed in the buyable button after the title
@@ -3502,7 +3625,7 @@ addLayer("m", {
                 title: "Enhanced Enhancer",
                 gain() { return player.m.points },
                 effect() { 
-                    let eff = player[this.layer].buyables[this.id].add(1).log10().div(hasUpgrade("p",44)?15:20).add(1);
+                    let eff = player[this.layer].buyables[this.id].add(1).log10().div(hasUpgrade("p",44)?Math.max(1,15/buyableEffect("o",31)):20).mul(buyableEffect("o",31)).add(1);
                     return eff;
                 },
                 display() { // Everything else displayed in the buyable button after the title
@@ -3878,6 +4001,12 @@ addLayer("sp", {
 				cost() { return new Decimal(1e13) },
 				unlocked() { return player.i.unlocked && hasUpgrade("p", 13) },
 			},
+			14: {
+				title: "Anti-Calm",
+				description: "<b>Prestigious Intensity</b>'s effect is stronger.",
+				cost() { return new Decimal(2e38) },
+				unlocked() { return player.mc.unlocked && hasUpgrade("p", 14) },
+			},
 			21: {
 				title: "Hyperspace-Life Synergy",
 				description: "Life Essence gain is boosted by Hyperspace Energy.",
@@ -3918,7 +4047,9 @@ addLayer("sp", {
 				effect() { return player.sp.best.plus(1).log10().plus(1).log10().plus(1) },
 				effectDisplay() { return format(tmp.sp.upgrades[33].effect)+"x" },
 			},
-        }
+        },
+
+        passiveGeneration() { return (player.ma.points.gte(10)?1:0) },
 });
 
 addLayer("hs", {
@@ -3942,6 +4073,7 @@ addLayer("hs", {
         type: "normal", // normal: cost to gain currency depends on amount gained. static: cost depends on how much you already have
         exponent() { 
             let exp = new Decimal(10);
+            exp = exp.mul(tmp.mc.mechEff);
             return exp;
         }, // Prestige currency exponent
         gainMult() { // Calculate the multiplier for main currency from bonuses
@@ -3953,6 +4085,7 @@ addLayer("hs", {
                 else mult = mult.mul(player.i.points.add(1));
             }
             mult = mult.mul(Decimal.pow(tmp.ma.milestoneBase,player.ma.points));
+            if(player.i.buyables[11].gte(3))mult = mult.mul(buyableEffect("s",23));
             return mult
         },
         gainExp() { // Calculate the exponent on main currency from bonuses
@@ -4216,6 +4349,10 @@ addLayer("l", {
                 done() {return player[this.layer].best.gte(1e16)}, // Used to determine when to give the milestone
                 effectDescription: "First 3 solarity buyables gain is better.",
             },
+            9: {requirementDescription: "1e40 Life Essence",
+                done() {return player[this.layer].best.gte(1e40)}, // Used to determine when to give the milestone
+                effectDescription: "Unlock Blueshifted Flares.",
+            },
 	},
 	 update(diff){
 		 player.l.power = player.l.power.add(tmp.l.effect.times(diff)).max(0)
@@ -4397,7 +4534,7 @@ addLayer("i", {
 			cols: 1,
 			11: {
 				title: "Imperium Building",
-				cap() { return new Decimal(2) },
+				cap() { return new Decimal(3) },
 				cost(x=player[this.layer].buyables[this.id]) { // cost for buying xth buyable, can be an object if there are multiple currencies
                     let cost = x.mul(2).add(2);
 					return cost;
@@ -4422,7 +4559,10 @@ addLayer("i", {
                 style: {'height':'200px', 'width':'200px'},
 				autoed() { return false },
 			},
-        }
+        },
+        canBuyMax() { return hasMilestone("mc",0) },
+        autoPrestige() { return hasMilestone("mc",0) },
+        resetsNothing() { return hasMilestone("mc",0) },
 });
 
 
@@ -4463,6 +4603,7 @@ addLayer("ma", {
             
         },
 	milestoneBase(){
+		if(player.mc.unlocked)return new Decimal(3);
 		if(player.ge.unlocked)return new Decimal(2.5);
 		return new Decimal(2);
 	},
@@ -4495,7 +4636,7 @@ addLayer("ma", {
             },
             5: {requirementDescription: "6 Mastery",
                 done() {return player[this.layer].best.gte(6)}, // Used to determine when to give the milestone
-                effectDescription(){ return layers.ma.getMilestoneDesc()+"<br>Master Enhance: Enhance point gain is better."},
+                effectDescription(){ return layers.ma.getMilestoneDesc()+"<br>Master Enhance: Enhance point gain is better. Unlock new enhance upgrades."},
             },
             6: {requirementDescription: "7 Mastery",
                 done() {return player[this.layer].best.gte(7)}, // Used to determine when to give the milestone
@@ -4504,6 +4645,14 @@ addLayer("ma", {
             7: {requirementDescription: "8 Mastery",
                 done() {return player[this.layer].best.gte(8)}, // Used to determine when to give the milestone
                 effectDescription(){ return layers.ma.getMilestoneDesc()+(player[this.layer].best.lt(8)?" The previous effect will affect Solarity/Subspace in all Mastery milestones.":"")+"<br>Master Quirks: <b>Exponential Madness</b> is better. Unlock new quirk upgrades."},
+            },
+            8: {requirementDescription: "9 Mastery",
+                done() {return player[this.layer].best.gte(9)}, // Used to determine when to give the milestone
+                effectDescription(){ return layers.ma.getMilestoneDesc()+"<br>Master Hindrance Spirit: H Challenge Effects are boosted by Hindrance Spirit."},
+            },
+            9: {requirementDescription: "10 Mastery",
+                done() {return player[this.layer].best.gte(10)}, // Used to determine when to give the milestone
+                effectDescription(){ return layers.ma.getMilestoneDesc()+" Gain 100% of Super Point gain per second.<br>Master Subspace: Subspace effect is better. Subspace energy is cheaper."},
             },
         },
 })
@@ -4620,5 +4769,83 @@ addLayer("ge", {
                 },
             },
     }
+});
+
+
+
+addLayer("mc", {
+    name: "machines",
+    symbol: "MC",
+    position: 3,
+    row: 6,
+    startData() { return {
+        unlocked: false,
+        points: new Decimal(0),
+			best: new Decimal(0),
+			total: new Decimal(0),
+			mechEn: new Decimal(0),
+    }},
+        color: "#c99a6b",
+    requires: function(){
+		return new Decimal(1e258);
+	},
+		nodeStyle() { return {
+            "background": ((((player.mc.unlocked||canReset("mc"))))?("radial-gradient(circle, #c99a6b 0%, #706d6d 100%)"):"#bf8f8f") ,
+		}},
+		componentStyles: {
+            "prestige-button"() {return { "background": (canReset("mc"))?("radial-gradient(circle, #c99a6b 0%, #706d6d 100%)"):"#bf8f8f" }},
+		},
+    resource: "machine power",
+    baseResource: "subspace", 
+    baseAmount() {return player.ss.subspace},
+    type: "normal",
+    exponent: 0.1,
+    hotkeys: [
+            {key: "c", description: "Press C to Machine Reset", onPress(){if (canReset(this.layer)) doReset(this.layer)}},],
+    layerShown(){return player.ge.unlocked},
+        branches: ["hs", "i", "id"],
+	gainMult(){
+		let ret=new Decimal(1);
+		return ret;
+	},
+	effect() {
+		let ret = player.mc.points;
+		return ret;
+	},
+	effectDescription() { // Optional text to describe the effects
+           let eff = this.effect();
+           return "which are generating "+format(eff)+" Mech-Energy/sec";
+       },
+        doReset(resettingLayer){ 
+            let keep = ["milestones"];
+            if (layers[resettingLayer].row > this.row) layerDataReset(this.layer, keep)
+        },
+
+	milestones: {
+            0: {requirementDescription: "1 Machine Power",
+                done() {return player[this.layer].best.gte(1)}, // Used to determine when to give the milestone
+                effectDescription: "Each Mastery now give 3x Super Points/Life Essence/Hyperspace Energy instead of 2.5x. Autobuy Imperium Bricks and it resets nothing.",
+            },
+	},
+	 update(diff){
+		 player.mc.mechEn = tmp.mc.effect.times(100).sub(tmp.mc.effect.times(100).sub(player.mc.mechEn).mul(Decimal.pow(0.99,diff)));
+	 },
+	 tabFormat: ["main-display",
+                    "prestige-button", "resource-display",
+                    ["blank", "5px"],
+                    ["display-text",
+                        function() {
+							return 'You have ' + format(player.mc.mechEn) + ' Mech-Energy, which multiplies hyperspace energy exponent by ' + format(tmp.mc.mechEff);
+						},
+                        {}],
+                        ["display-text","Your Mech-Energy are losing by 1% per second."],
+						"buyables",
+						"upgrades",
+						"milestones",
+				],
+	mechEff(){
+		let ret=player.mc.mechEn.add(1).log10().div(10).add(1);
+		return ret;
+	}
 });
 
