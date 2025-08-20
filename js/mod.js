@@ -13,11 +13,14 @@ let modInfo = {
 
 // Set your version in num and name
 let VERSION = {
-	num: "23",
-	name: "Machine",
+	num: "24",
+	name: "Neurons",
 }
 
 let changelog = `<h1>Changelog:</h1><br>
+	<h3>v24</h3><br>
+		- Added Neurons<br>
+                - Endgame: 24 points<br>
 	<h3>v23</h3><br>
 		- Added Machine<br>
                 - Endgame: 23 points<br>
