@@ -231,7 +231,8 @@ addLayer("b", {
         type: "static", // normal: cost to gain currency depends on amount gained. static: cost depends on how much you already have
         branches: ["p"],
         exponent() {
-            if(player.h.challenges[12]>=20.92)return Math.max(1.225/Math.sqrt(player.h.challenges[12]),0.25);
+            if(player.h.challenges[12]>=23)return Math.max(1.23/Math.sqrt(player.h.challenges[12]),0.25);
+            if(player.h.challenges[12]>=20.92)return Math.max(1.225/Math.sqrt(player.h.challenges[12]),0.257);
             if(player.h.challenges[12]>=19.4)return Math.max(1.211/Math.sqrt(player.h.challenges[12]),0.268);
             if(player.h.challenges[12]>=18.1)return Math.max(5.08/player.h.challenges[12],0.275);
             if(player.h.challenges[12]>=16)return 5/Math.min(player.h.challenges[12],17.8);
@@ -444,7 +445,8 @@ addLayer("g", {
         type: "static", // normal: cost to gain currency depends on amount gained. static: cost depends on how much you already have
         branches: ["p"],
         exponent() {
-            if(player.h.challenges[12]>=20.92)return Math.max(1.225/Math.sqrt(player.h.challenges[12]),0.25);
+            if(player.h.challenges[12]>=23)return Math.max(1.23/Math.sqrt(player.h.challenges[12]),0.25);
+            if(player.h.challenges[12]>=20.92)return Math.max(1.225/Math.sqrt(player.h.challenges[12]),0.257);
             if(player.h.challenges[12]>=19.4)return Math.max(1.211/Math.sqrt(player.h.challenges[12]),0.268);
             if(player.h.challenges[12]>=18.1)return Math.max(5.08/player.h.challenges[12],0.275);
             if(player.h.challenges[12]>=16)return 5/Math.min(player.h.challenges[12],17.8);
@@ -705,7 +707,8 @@ addLayer("t", {
         branches: ["b"],
         exponent() { 
             a=0.75;
-            if(player.h.challenges[22]>=19.63)a=Math.min(9.2/player.h.challenges[22],0.4279);
+            if(player.h.challenges[22]>=23.56)a=1.9/Math.sqrt(player.h.challenges[22]);
+            if(player.h.challenges[22]>=19.63)a=Math.max(Math.min(9.2/player.h.challenges[22],0.4279),0.3915);
             else if(player.h.challenges[22]>=10.5)a=a*10/Math.min(player.h.challenges[22],16);
             if(hasUpgrade("q",31))a=a/(player.q.buyables[11].add(1).log10().mul(0.01).toNumber()+1);
             a=Math.max(a,0.375);
@@ -1017,7 +1020,8 @@ addLayer("s", {
         branches: ["g"],
         exponent() { 
             a=0.75;
-            if(player.h.challenges[22]>=19.63)a=Math.min(9.2/player.h.challenges[22],0.4279);
+            if(player.h.challenges[22]>=23.56)a=1.9/Math.sqrt(player.h.challenges[22]);
+            if(player.h.challenges[22]>=19.63)a=Math.max(Math.min(9.2/player.h.challenges[22],0.4279),0.3915);
             else if(player.h.challenges[22]>=10.5)a=a*10/Math.min(player.h.challenges[22],16);
             if(hasUpgrade("q",31))a=a/(player.q.buyables[11].add(1).log10().mul(0.01).toNumber()+1);
             a=Math.max(a,0.375);
@@ -2604,7 +2608,9 @@ addLayer("h", {
                 rewardEffect(){
                     if(inChallenge("ne",11))return new Decimal(1);
                     let ret=new Decimal(player[this.layer].challenges[this.id]).div(hasMilestone("h",33)?5:hasMilestone("h",30)?10:hasMilestone("h",23)?20:50).mul(challengeEffect("h",42)).mul(challengeEffect("h",51)).mul(challengeEffect("h",52));
-                    if(player.ma.points.gte(9))ret = ret.mul(layers.h.getHCBoost().max(4)).div(4);
+                    let a = 4;
+                    if(hasMilestone("i",5))a = 1;
+                    if(player.ma.points.gte(9))ret = ret.mul(layers.h.getHCBoost().max(a)).div(a);
                     ret = ret.add(1);
                     return ret;
                 },
@@ -4179,7 +4185,10 @@ addLayer("sp", {
         };
     },
     color: "#00a7bf",
-    requires: new Decimal(16),
+        requires() { 
+            if(player.ma.points.gte(16))return new Decimal(16).sub(player.points.max(24).sub(24).mul(5)).max(1);
+            return new Decimal(16) 
+        }, // Can be a function that takes requirement increases into account
     resource: "super points",
     baseResource: "points",
     baseAmount() { return player.points;},
@@ -4370,6 +4379,7 @@ addLayer("sp", {
                     let exp=new Decimal(100);
                     if(hasMilestone("h",41))exp = exp.add(challengeEffect("h",11));
                     if(hasUpgrade("sp",22))exp=exp.mul(player.sp.upgrades.length);
+                    if(player.ma.points.gte(16))return player.sp.total.plus(1).pow(exp);
                     return softcap(player.sp.total.plus(1).pow(exp),new Decimal("1e80000"),player.sp.best.gte(1e91)?0.3:player.sp.best.gte(1e72)?0.1:0.01);
                 },
 				effectDisplay() { return format(tmp.sp.upgrades[12].effect)+"x" },
@@ -4455,6 +4465,7 @@ addLayer("sp", {
         },
 
         passiveGeneration() { return (player.ma.points.gte(10)?1:0) },
+        marked: function(){return player.ma.points.gte(16)}
 });
 
 addLayer("hs", {
@@ -4471,7 +4482,10 @@ addLayer("hs", {
 
         roundUpCost: true,
         color: "#dfdfff",
-        requires() { if(hasMilestone("sp",15))return new Decimal(200); if(hasMilestone("sp",12))return new Decimal(240); return new Decimal(277) }, // Can be a function that takes requirement increases into account
+        requires() { 
+
+            if(player.ma.points.gte(17))return new Decimal(160).sub(player.points.max(25).sub(25).mul(50)).max(1);
+        if(hasMilestone("sp",15))return new Decimal(200); if(hasMilestone("sp",12))return new Decimal(240); return new Decimal(277) }, // Can be a function that takes requirement increases into account
         resource: "hyperspace energy", // Name of prestige currency 
         baseResource: "space energy", // Name of resource prestige is based on
         baseAmount() {return player.s.points}, // Get the current amount of baseResource
@@ -4717,6 +4731,7 @@ branches: ["ss", "ba"],
             player.hs.buyables[21]=player.hs.buyables[1].add(32).div(64).floor();
             player.hs.buyables[22]=player.hs.buyables[1].add(64).div(128).floor();
         },
+        marked: function(){return player.ma.points.gte(17)}
 });
 
 addLayer("l", {
@@ -5035,6 +5050,16 @@ addLayer("i", {
                 done() {return player[this.layer].best.gte(11) && player.ma.unlocked}, // Used to determine when to give the milestone
                 effectDescription: "Each Imperium Brick multiply Life Essence/Super Point/Subspace gain by 2.",
             },
+            5: {requirementDescription: "12 Imperium Bricks",
+                unlocked(){return player.ma.unlocked},
+                done() {return player[this.layer].best.gte(12) && player.ma.unlocked}, // Used to determine when to give the milestone
+                effectDescription: "<b>Black Area</b> effect is better.",
+            },
+            6: {requirementDescription: "13 Imperium Bricks",
+                unlocked(){return player.ne.unlocked},
+                done() {return player[this.layer].best.gte(13) && player.ne.unlocked}, // Used to determine when to give the milestone
+                effectDescription: "The second Thought effect is squared.",
+            },
         },
 		buyables: {
 			rows: 1,
@@ -5181,6 +5206,14 @@ addLayer("ma", {
                 done() {return player[this.layer].best.gte(15)}, // Used to determine when to give the milestone
                 effectDescription(){ return layers.ma.getMilestoneDesc()+"<br>Master Phantom Souls: Phantom Souls requirement is 1, Phantom soul base +8.5. Unlock Phantom Power."},
             },
+            15: {requirementDescription: "16 Mastery",
+                done() {return player[this.layer].best.gte(16)}, // Used to determine when to give the milestone
+                effectDescription(){ return layers.ma.getMilestoneDesc()+"<br>Master Super Points: Super Point gain is better. Remove <b>Super Boost</b> softcap."},
+            },
+            16: {requirementDescription: "17 Mastery",
+                done() {return player[this.layer].best.gte(17)}, // Used to determine when to give the milestone
+                effectDescription(){ return layers.ma.getMilestoneDesc()+"<br>Master Hyperspace: Hyperspace requirement is reduced and is further reduced by points above 25."},
+            },
         },
 })
 
@@ -5218,6 +5251,7 @@ addLayer("ge", {
 	gainMult(){
 		let ret=new Decimal(1);
         if(hasMilestone("en",0))ret = ret.mul(Decimal.pow(tmp.ma.milestoneBase,player.ma.points));
+        ret = ret.mul(buyableEffect("mc",22));
 		return ret;
 	},
 	effect() {
@@ -5394,6 +5428,7 @@ addLayer("mc", {
 	gainMult(){
 		let ret=new Decimal(1);
         if(hasMilestone("ne",0))ret = ret.mul(Decimal.pow(tmp.ma.milestoneBase,player.ma.points));
+        ret = ret.mul(buyableEffect("mc",22));
 		return ret;
 	},
 	effect() {
@@ -5438,6 +5473,11 @@ addLayer("mc", {
                 done() {return player[this.layer].buyables[13].gte(3)}, // Used to determine when to give the milestone
                 effectDescription: "Machine Upgrade affects first 2 gear buyables.",
             },
+            6: {requirementDescription: "5 Machine Upgrades",
+                unlocked() {return hasMilestone("ne",2)},
+                done() {return player[this.layer].buyables[13].gte(5)}, // Used to determine when to give the milestone
+                effectDescription: "Unlock The Port.",
+            },
 	},
 	 update(diff){
 		 player.mc.mechEn = tmp.mc.effect.times(100).sub(tmp.mc.effect.times(100).sub(player.mc.mechEn).mul(Decimal.pow(0.99,diff)));
@@ -5464,7 +5504,7 @@ addLayer("mc", {
 						},
                         {}],
                         ["display-text","Your Mech-Energy are losing by 1% per second."],
-						["row",[["buyable",21]]],
+						["row",[["buyable",21],["buyable",22]]],
      ],unlocked(){return hasMilestone("mc",4)}
      },
      },
@@ -5564,7 +5604,27 @@ addLayer("mc", {
                     return "Active: " + format(player[this.layer].buyables[this.id]) + " Mech-Energy\n\
                     Currently: Machine Upgrade level boost Super Points by "+format(data.effect)+"x.";
                 },
-                unlocked() { return hasMilestone("ne",2) }, 
+                unlocked() { return hasMilestone("mc",4) }, 
+                canAfford() {
+                    return player[this.layer].mechEn.gte(player[this.layer].buyables[this.id])
+                },
+                buy() { 
+                    player[this.layer].buyables[this.id] = player[this.layer].buyables[this.id].max(player[this.layer].mechEn)
+                    player[this.layer].mechEn = new Decimal(0)
+                },
+            },
+            22: {
+                title: "The Port", // Optional, displayed at the top in a larger font
+                effect(x=player[this.layer].buyables[this.id]) { // Effects of owning x of the items, x is a decimal
+                    let eff = player[this.layer].buyables[this.id].add(1).log10().pow(player[this.layer].buyables[13].sqrt()).add(1).pow(0.2);
+                    return eff;
+                },
+                display() { // Everything else displayed in the buyable button after the title
+                    let data = tmp[this.layer].buyables[this.id]
+                    return "Active: " + format(player[this.layer].buyables[this.id]) + " Mech-Energy\n\
+                    Currently: Machine Upgrade level boost Gear and Machine Power by "+format(data.effect)+"x.";
+                },
+                unlocked() { return hasMilestone("mc",6) }, 
                 canAfford() {
                     return player[this.layer].mechEn.gte(player[this.layer].buyables[this.id])
                 },
@@ -5630,6 +5690,7 @@ addLayer("ne", {
 		},
 		effect() {
 			let eff = player[this.layer].points;
+            if(hasMilestone("ne", 3))eff = eff.times(Decimal.pow(2,player[this.layer].points));
 			return eff;
 		},
 		effectDescription() { return "which multiply Signal gain speed by <h2 style='color: #ded9ff; text-shadow: #ded9ff 0px 0px 10px;'>"+format(tmp[this.layer].effect)+"</h2>." },
@@ -5644,7 +5705,7 @@ addLayer("ne", {
 			return div;
 		},
 		signalLim() { return Decimal.pow(tmp[this.layer].signalLimThresholdInc, player.ne.thoughts).times(100).div(tmp[this.layer].signalLimThresholdDiv) },
-		thoughtEff2() { return player.ne.thoughts.add(1).log10().div(100).add(1).pow(hasMilestone("ne", 2)?2:1); },
+		thoughtEff2() { return player.ne.thoughts.add(1).log10().div(100).add(1).pow(hasMilestone("ne", 2)?2:1).pow(hasMilestone("i", 6)?2:1); },
         challenges: {
 			rows: 1,
 			cols: 1,
@@ -5731,6 +5792,11 @@ addLayer("ne", {
 				requirementDescription: "3,000,000 Signals",
 				done() { return player.ne.signals.gte(3e6) || player.ne.milestones.includes(2) },
 				effectDescription() { return "The Thought requirement increases slower (5x -> 3x), the second Thought effect is squared, and multiply Signal gain by your Neurons, and unlock 3rd Machine buyable." },
+			},
+			3: {
+				requirementDescription: "100,000,000 Signals",
+				done() { return player.ne.signals.gte(1e8) || player.ne.milestones.includes(3) },
+				effectDescription() { return "The Thought requirement increases even slower (3x -> 2.5x), and the Neuron effect uses a better formula." },
 			},
         },
 
@@ -5897,8 +5963,13 @@ addLayer("en", {
 			},
 			3: {
 				requirementDescription: "1e8 Energy in one reset",
-				done() { return (player.en.bestOnReset.gte(1e8)) || player.en.milestones.includes(3) },
+				done() { return player.en.bestOnReset.gte(1e8) },
 				effectDescription() { return "Unlock Mind Watts." },
+			},
+			4: {
+				requirementDescription: "1e10 Energy in one reset",
+				done() { return player.en.bestOnReset.gte(1e10) },
+				effectDescription() { return "The Mind Watt & Super Watt gain roots are decreased by 1.5" },
 			},
         },
 });
