@@ -16,7 +16,3 @@ addLayer("donate", {
 		["raw-html", "<a href=/b.html target=_blank>Input Supporter Code To Gain Bonuses!</a>"],
 	],
 });
-
-setInterval(function(){
-	window.supporterCodeInput = (sha512_256(localStorage.supporterCode+"loader3229").slice(2) == '97b4061c3a44e2950549613ba148eff34250441a9b3121698a15fcefdb4f5a');
-},10);
