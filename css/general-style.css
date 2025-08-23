@@ -39,3 +39,59 @@ h1, h2, h3, b, input {
 	color: var(--points);
 	text-shadow: 0 0 10px var(--points);
 }
+
+
+
+.ma:not(.locked):not(.bought) {
+	background: radial-gradient(circle, rgba(255,100,100,1) 0%, rgba(255,159,127,1) 50%);
+	background-size: 200%;
+	background-position: center;
+	animation: mastery 4s linear infinite;
+}
+
+
+.en:not(.locked):not(.bought) {
+	background: radial-gradient(#eaff00, #d6ff30, #eaff00, #d6ff30);
+	background-size: 100% 50%;
+	text-shadow: 0px 0px 7px #556125;
+	animation: energy 10s linear infinite;
+}
+
+
+
+@keyframes mastery {
+	0% {
+		background-size: 200%;
+	}
+	50% {
+		background-size: 100%;
+	}
+	100% {
+		background-size: 200%;
+	}
+}
+
+@keyframes energy {
+	0% {
+		background-position: 0% 0%;
+	}
+	100% {
+		background-position: 0% 400%;
+	}
+}
+
+@keyframes idea {
+	0% {
+		filter: brightness(100%);
+	}
+	25% {
+		filter: brightness(125%);
+	}
+	75% {
+		filter: brightness(75%);
+	}
+	100% {
+		filter: brightness(100%);
+	}
+}
+
