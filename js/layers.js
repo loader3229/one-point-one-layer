@@ -5273,7 +5273,7 @@ addLayer("i", {
             },
             9: {requirementDescription: "16 Imperium Bricks",
                 unlocked(){return player.r.unlocked},
-                done() {return player[this.layer].best.gte(15) && player.r.unlocked}, // Used to determine when to give the milestone
+                done() {return player[this.layer].best.gte(16) && player.r.unlocked}, // Used to determine when to give the milestone
                 effectDescription: "Robot Requirement is 1.",
             },
         },
