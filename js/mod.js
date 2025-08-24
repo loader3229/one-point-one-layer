@@ -94,10 +94,18 @@ function getPointBase(){
     }
     return new Decimal(10);
 }
+
+function getPointSCStart(){
+    if(hasUpgrade("ai",11))return new Decimal(28);
+    return new Decimal(27);
+}
+function getPointSC(){
+    return 10;
+}
 // Calculate points/sec!
 function getPointGen() {
-	let gain = softcap(getRealPoints().add(getRealPointGen()).log(getPointBase()).log2().div(inChallenge("h",11)?2:1),new Decimal(27),0.1).sub(player.points);
-    if(inChallenge("h",52))gain = softcap(getRealPoints().add(getRealPointGen()).log(getPointBase()).log2().div(inChallenge("h",11)?2:1).add(1).log2(),new Decimal(27),0.1).sub(player.points);
+	let gain = softcap(getRealPoints().add(getRealPointGen()).log(getPointBase()).log2().div(inChallenge("h",11)?2:1),getPointSCStart(),1/getPointSC()).sub(player.points);
+    if(inChallenge("h",52))gain = softcap(getRealPoints().add(getRealPointGen()).log(getPointBase()).log2().div(inChallenge("h",11)?2:1).add(1).log2(),getPointSCStart(),1/getPointSC()).sub(player.points);
 	return gain
 }
 
@@ -119,14 +127,14 @@ function getRealPointGen() {
 }
 
 function getRealPoints() {
-    if(inChallenge("h",52))return Decimal.pow(getPointBase(),Decimal.pow(2,Decimal.pow(2,softcap(player.points,new Decimal(27),10)).sub(1).mul(inChallenge("h",11)?2:1)));
-	return Decimal.pow(getPointBase(),Decimal.pow(2,softcap(player.points,new Decimal(27),10).mul(inChallenge("h",11)?2:1)));
+    if(inChallenge("h",52))return Decimal.pow(getPointBase(),Decimal.pow(2,Decimal.pow(2,softcap(player.points,getPointSCStart(),getPointSC())).sub(1).mul(inChallenge("h",11)?2:1)));
+	return Decimal.pow(getPointBase(),Decimal.pow(2,softcap(player.points,getPointSCStart(),getPointSC()).mul(inChallenge("h",11)?2:1)));
 }
 
 function setRealPoints(s){
 	player.points=s.log(getPointBase()).log2().div(inChallenge("h",11)?2:1);
     if(inChallenge("h",52))player.points=player.points.add(1).log2();
-    player.points=softcap(player.points,new Decimal(27),0.1);
+    player.points=softcap(player.points,getPointSCStart(),1/getPointSC());
 }
 // You can add non-layer related variables that should to into "player" and be saved here, along with default values
 function addedPlayerData() { return {

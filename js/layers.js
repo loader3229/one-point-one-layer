@@ -5896,10 +5896,21 @@ addLayer("mc", {
                 done() {return player[this.layer].buyables[13].gte(15)}, // Used to determine when to give the milestone
                 effectDescription: "Gain 100% of Machine Power gain per second.",
             },
+            10: {requirementDescription: "17 Machine Upgrades",
+                unlocked() {return hasMilestone("ne",2)},
+                done() {return player[this.layer].buyables[13].gte(17)}, // Used to determine when to give the milestone
+                effectDescription: "Motherboard is autoed.",
+            },
 	},
 	 update(diff){
          if(player.ma.points.gte(22))player.mc.mechEn = player.mc.mechEn.add(tmp.mc.effect.mul(diff));
 		 else player.mc.mechEn = tmp.mc.effect.times(100).sub(tmp.mc.effect.times(100).sub(player.mc.mechEn).mul(Decimal.pow(0.99,diff)));
+         if(hasMilestone("mc",10)){
+             player.mc.buyables[21]=player.mc.buyables[21].add(player.mc.mechEn.mul(diff));
+             player.mc.buyables[22]=player.mc.buyables[22].add(player.mc.mechEn.mul(diff));
+             player.mc.buyables[31]=player.mc.buyables[31].add(player.mc.mechEn.mul(diff));
+             player.mc.buyables[32]=player.mc.buyables[32].add(player.mc.mechEn.mul(diff));
+         }
 	 },
 	 tabFormat: {"Main Tab":{"content":["main-display",
                     "prestige-button", "resource-display",
@@ -6110,7 +6121,7 @@ addLayer("ne", {
 			thoughts: new Decimal(0),
         }},
         color: "#ded9ff",
-        requires() { if(hasUpgrade("q",25))return new Decimal(1); return new Decimal("1e370") }, // Can be a function that takes requirement increases into account
+        requires() { if(hasMilestone("ai",0))return new Decimal(1); if(hasUpgrade("q",25))return new Decimal(1); return new Decimal("1e370") }, // Can be a function that takes requirement increases into account
         resource: "neurons", // Name of prestige currency
         baseResource: "subspace", // Name of resource prestige is based on
         baseAmount() {return player.ss.subspace}, // Get the current amount of baseResource
@@ -6150,7 +6161,7 @@ addLayer("ne", {
 						player.ne.thoughts = player.ne.thoughts.plus(1);
 					}
 				}
-				//if (player.ne.autoNN && hasMilestone("ne", 7)) layers.ne.buyables[11].buyMax();
+				if (hasMilestone("ai", 2)) layers.ne.buyables[11].buyMax();
 			}
 		},
 		effect() {
@@ -6189,6 +6200,7 @@ addLayer("ne", {
                     if(hasUpgrade("q",25))mult = mult.times(2);
                     if(hasUpgrade("q",43))mult = mult.times(2);
                     mult = mult.times(buyableEffect("l",15));
+            mult = mult.mul(tmp.ai.conscEff1);
                     return mult;
 				},
 				amt() { 
@@ -6206,6 +6218,10 @@ addLayer("ne", {
                 if(hasMilestone("ne",1))ret = ret+"<br>Multiply Subspace & SG bases by "+format(tmp.ne.thoughtEff2)+"x";
                 if(hasMilestone("ne",5))ret = ret+"<br>Multiply Energy gain by "+format(tmp.ne.thoughtEff3)+"x";
                 return ret;
+                },
+                onEnter(){
+                    doReset("m",true);
+                    player.ne.activeChallenge=11;
                 },
 				style() { return {'background-color': "#484659", filter: "brightness("+(100+player.ne.signals.plus(1).log10().div(tmp.ne.signalLim.plus(1).log10()).times(50).toNumber())+"%)", color: "white", 'border-radius': "25px", height: "400px", width: "400px"}},
 			},
@@ -6285,6 +6301,9 @@ addLayer("ne", {
 			},
         },
 
+        canBuyMax() { return hasMilestone("ai",0) },
+        autoPrestige() { return hasMilestone("ai",0) },
+        resetsNothing() { return hasMilestone("ai",0) },
 
 
 });
@@ -6354,6 +6373,7 @@ addLayer("en", {
 			if (hasMilestone("i", 7)) mult = mult.times(player.i.points.add(1));
             if(hasMilestone("ne",5))mult = mult.times(tmp.ne.thoughtEff3);
             if(hasMilestone("h",44))mult = mult.times(layers.h.getHCBoost());
+            mult = mult.mul(tmp.ai.conscEff1);
 			return mult;
 		},
 		onPrestige(gain) { player.en.bestOnReset = player.en.bestOnReset.max(gain) },
@@ -6503,6 +6523,7 @@ addLayer("r", {
             
             if(hasMilestone("l",17))mult = mult.times(buyableEffect("l", 16));
             mult = mult.mul(buyableEffect("r",33));
+            mult = mult.mul(tmp.ai.conscEff1);
             return mult;
         },
         gainExp() { // Calculate the exponent on main currency from bonuses
@@ -6859,6 +6880,7 @@ addLayer("id", {
         }},
         color: "#fad682",
         requires() { 
+        if(hasMilestone("ai",0))return new Decimal(1);
             let req=Decimal.pow(70,Decimal.pow(0.01,player.points.sub(26))).ceil();
             if(player.points.gte(26.1))req=Decimal.pow(70,Decimal.pow(0.01,player.points.sub(26)));
             return req;
@@ -6920,6 +6942,137 @@ addLayer("id", {
 				requirementDescription: "11 Ideas",
 				done() { return player.id.points.gte(11) },
 				effectDescription: "The Idea effect is 50% more effective.",
+			},
+        },
+        canBuyMax() { return hasMilestone("ai",0) },
+        autoPrestige() { return hasMilestone("ai",0) },
+        resetsNothing() { return hasMilestone("ai",0) },
+});
+
+
+addLayer("ai", {
+		name: "AI", // This is optional, only used in a few places, If absent it just uses the layer id.
+        symbol: "AI", // This appears on the layer's node. Default is the id with the first letter capitalized
+        position: 0, // Horizontal position within a row. By default it uses the layer id and sorts in alphabetical order
+        startData() { return {
+            unlocked: false,
+			points: new Decimal(0),
+			best: new Decimal(0),
+			total: new Decimal(0),
+			first: 0,
+			consc: new Decimal(0),
+        }},
+        color: "#e6ffcc",
+		nodeStyle() { return {
+			background: (player.ai.unlocked||canReset("ai"))?("radial-gradient(circle, #e6ffcc 0%, #566b65 100%)"):"#bf8f8f",
+		}},
+		componentStyles: {
+			"prestige-button": {
+				background() { return (canReset("ai"))?("radial-gradient(circle, #e6ffcc 0%, #566b65 100%)"):"#bf8f8f" },
+			},
+		},
+        requires(){
+            return new Decimal(800);
+        }, // Can be a function that takes requirement increases into account
+        resource: "superintelligence", // Name of prestige currency 
+        baseResource: "revelations", // Name of resource prestige is based on
+        baseAmount() {return tmp.id.rev}, // Get the current amount of baseResource
+        type: "normal", // normal: cost to gain currency depends on amount gained. static: cost depends on how much you already have
+        exponent: new Decimal(3), // Prestige currency exponent
+		roundUpCost: true,
+        gainMult() { // Calculate the multiplier for main currency from bonuses
+            mult = new Decimal(1);
+            return mult
+        },
+        gainExp() { // Calculate the exponent on main currency from bonuses
+            return new Decimal(1)
+        },
+        row: 6, // Row the layer is in on the tree (0 is the first row)
+        hotkeys: [
+            {key: "R", description: "Press Shift+R to AI Reset", onPress(){if (canReset(this.layer)) doReset(this.layer)}},
+        ],
+		passiveGeneration() { return 0 },
+        doReset(resettingLayer){ 
+			let keep = ["milestones"];
+			if (layers[resettingLayer].row > this.row) layerDataReset(this.layer, keep)
+        },
+        layerShown(){return player.r.unlocked && player.id.unlocked },
+        branches: ["r", ["id", 3]],
+		update(diff) {
+			player.ai.consc = player.ai.consc.add(buyableEffect("ai",11).mul(diff));
+		},
+		conscEff1() { return player.ai.consc.plus(1) },
+		nodeSlots() { return Math.floor(player.ai.buyables[11].div(2).min(16).toNumber()); },
+        tabFormat: ["main-display",
+			"prestige-button",
+			"resource-display", "blank",
+			["buyable", 11], "blank",
+			["display-text", function() { return "<h3>"+format(player.ai.consc)+"</h3> Artificial Consciousness" }], 
+			["display-text", function() { return "Effect: Multiplies Energy, Signal, & Robot gain by "+format(tmp.ai.conscEff1) }],"blank", "blank",
+			["clickable", 11],
+			["display-text", function() { return "Nodes: "+formatWhole(player.ai.upgrades.length)+" / "+formatWhole(tmp.ai.nodeSlots) }], "blank",
+			"upgrades", "blank", "milestones"
+		],
+		buyables: {
+			rows: 1,
+			cols: 1,
+			11: {
+				title: "AI Network",
+				cost(x=player[this.layer].buyables[this.id]) {
+					return Decimal.pow(2, x.pow(1.5)).floor();
+				},
+				effect() { return player[this.layer].buyables[this.id].mul(player[this.layer].points.add(1)).mul(Decimal.pow(2,player[this.layer].buyables[this.id])); },
+				display() { // Everything else displayed in the buyable button after the title
+                    let data = tmp[this.layer].buyables[this.id];
+					let cost = data.cost;
+					let amt = player[this.layer].buyables[this.id];
+                    let display = formatWhole(player.ai.points)+" / "+formatWhole(cost)+" Superintelligence<br><br>Level: "+formatWhole(amt)+"<br><br>Reward: Generates "+formatWhole(data.effect)+" Artificial Consciousness/sec.";
+					return display;
+                },
+                unlocked() { return player[this.layer].unlocked }, 
+                canAfford() {
+					if (!tmp[this.layer].buyables[this.id].unlocked) return false;
+					let cost = layers[this.layer].buyables[this.id].cost();
+                    return player[this.layer].unlocked && player.ai.points.gte(cost);
+				},
+                buy() { 
+					let cost = tmp[this.layer].buyables[this.id].cost;
+					player.ai.points = player.ai.points.sub(cost);
+					player.ai.buyables[this.id] = player.ai.buyables[this.id].plus(1);
+                },
+                style: {'height':'200px', 'width':'200px'},
+				autoed() { return false },
+			},
+		},
+        upgrades: {
+			rows: 4,
+			cols: 4,
+			11: {
+				title: "Node AA",
+				description: "Point softcap starts later.",
+				cost: new Decimal(2),
+				canAfford() {
+					return player.ai.points.gte(layers[this.layer].upgrades[this.id].cost) && (player.ai.upgrades.length<tmp.ai.nodeSlots)
+				},
+				unlocked() { return player.ai.unlocked },
+				style: {height: '150px', width: '150px'},
+			},
+        },
+		milestones: {
+			0: {
+				requirementDescription: "1 superintelligence",
+				done() { return (player.ai.best.gte(1)) },
+				effectDescription: "Autobuy Neurons and Ideas, Neurons and Ideas requirements are 1, Neurons and Ideas don't reset anything.",
+			},
+			1: {
+				requirementDescription: "3 superintelligence",
+				done() { return (player.ai.best.gte(3)) },
+				effectDescription: "Unlock an AI node.",
+			},
+			2: {
+				requirementDescription: "6 superintelligence",
+				done() { return (player.ai.best.gte(6)) },
+				effectDescription: "Autobuy Neural Network.",
 			},
         },
 });
