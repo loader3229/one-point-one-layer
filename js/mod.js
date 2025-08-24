@@ -87,13 +87,17 @@ function canGenPoints(){
 }
 
 function getPointBase(){
-    if(player.h.challenges[11]>=5)return new Decimal(2).add(40/player.h.challenges[11]);
+    if(player.h.challenges[11]>=5){
+        let s=40/player.h.challenges[11];
+        if(hasMilestone("sp",23))s*=Decimal.pow(0.999,softcap(player.sp.points.add(1).log10(),new Decimal(625),0.5).sub(400)).toNumber();
+        return new Decimal(2).add(s);
+    }
     return new Decimal(10);
 }
 // Calculate points/sec!
 function getPointGen() {
-	let gain = getRealPoints().add(getRealPointGen()).log(getPointBase()).log2().div(inChallenge("h",11)?2:1).sub(player.points);
-    if(inChallenge("h",52))gain = getRealPoints().add(getRealPointGen()).log(getPointBase()).log2().div(inChallenge("h",11)?2:1).add(1).log2().sub(player.points);
+	let gain = softcap(getRealPoints().add(getRealPointGen()).log(getPointBase()).log2().div(inChallenge("h",11)?2:1),new Decimal(27),0.1).sub(player.points);
+    if(inChallenge("h",52))gain = softcap(getRealPoints().add(getRealPointGen()).log(getPointBase()).log2().div(inChallenge("h",11)?2:1).add(1).log2(),new Decimal(27),0.1).sub(player.points);
 	return gain
 }
 
@@ -115,13 +119,14 @@ function getRealPointGen() {
 }
 
 function getRealPoints() {
-    if(inChallenge("h",52))return Decimal.pow(getPointBase(),Decimal.pow(2,Decimal.pow(2,player.points).sub(1).mul(inChallenge("h",11)?2:1)));
-	return Decimal.pow(getPointBase(),Decimal.pow(2,player.points.mul(inChallenge("h",11)?2:1)));
+    if(inChallenge("h",52))return Decimal.pow(getPointBase(),Decimal.pow(2,Decimal.pow(2,softcap(player.points,new Decimal(27),10)).sub(1).mul(inChallenge("h",11)?2:1)));
+	return Decimal.pow(getPointBase(),Decimal.pow(2,softcap(player.points,new Decimal(27),10).mul(inChallenge("h",11)?2:1)));
 }
 
 function setRealPoints(s){
 	player.points=s.log(getPointBase()).log2().div(inChallenge("h",11)?2:1);
     if(inChallenge("h",52))player.points=player.points.add(1).log2();
+    player.points=softcap(player.points,new Decimal(27),0.1);
 }
 // You can add non-layer related variables that should to into "player" and be saved here, along with default values
 function addedPlayerData() { return {
