@@ -13,11 +13,14 @@ let modInfo = {
 
 // Set your version in num and name
 let VERSION = {
-	num: "27",
-	name: "Ideas",
+	num: "28",
+	name: "AI",
 }
 
 let changelog = `<h1>Changelog:</h1><br>
+	<h3>v28</h3><br>
+		- Added AI<br>
+                - Endgame: 28 points<br>
 	<h3>v27</h3><br>
 		- Added Ideas<br>
                 - Endgame: 27 points<br>
@@ -92,7 +95,7 @@ function canGenPoints(){
 function getPointBase(){
     if(player.h.challenges[11]>=5){
         let s=40/player.h.challenges[11];
-        if(hasMilestone("sp",23))s*=Decimal.pow(0.999,softcap(player.sp.points.add(1).log10(),new Decimal(625),0.5).sub(400)).toNumber();
+        if(hasMilestone("sp",23))s*=Decimal.pow(0.999,softcap(player.sp.points.add(1).log10().min(800),new Decimal(625),0.5).sub(400)).toNumber();
         return new Decimal(2).add(s);
     }
     return new Decimal(10);
