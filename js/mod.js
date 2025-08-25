@@ -13,8 +13,8 @@ let modInfo = {
 
 // Set your version in num and name
 let VERSION = {
-	num: "28",
-	name: "AI",
+	num: "29",
+	name: "Civilization",
 }
 
 let changelog = `<h1>Changelog:</h1><br>
@@ -95,15 +95,21 @@ function canGenPoints(){
 function getPointBase(){
     if(player.h.challenges[11]>=5){
         let s=40/player.h.challenges[11];
-        if(hasMilestone("sp",23))s*=Decimal.pow(0.999,softcap(player.sp.points.add(1).log10().min(800),new Decimal(625),0.5).sub(400)).toNumber();
+        if(hasMilestone("sp",23) && hasUpgrade("sp",45))s*=(650/player.sp.points.add("1e650").log10());
+        else if(hasMilestone("sp",23))s*=Decimal.pow(0.999,softcap(player.sp.points.add(1).log10().min(800),new Decimal(625),0.5).sub(400)).toNumber();
+        if(player.c.unlocked)s*=Decimal.pow(0.99,tmp.c.power[1]).toNumber();
+        if(s!=s)s=8;
         return new Decimal(2).add(s);
     }
     return new Decimal(10);
 }
 
 function getPointSCStart(){
-    if(hasUpgrade("ai",11))return new Decimal(28);
-    return new Decimal(27);
+    let ret=new Decimal(27);
+    if(hasUpgrade("ai",11))ret = ret.add(1);
+    if(hasUpgrade("ai",44))ret = ret.add(0.5);
+    if(player.c.unlocked)ret = ret.add(tmp.c.power[1].div(100));
+    return ret;
 }
 function getPointSC(){
     return 10;
@@ -115,7 +121,7 @@ function getPointGen() {
 	return gain
 }
 
-function getRealPointGen() {
+function getRealPointGenBeforeTaxes() {
 	let gain = new Decimal(0)
 	if(hasUpgrade("p",11))gain=gain.add(player.p.points.mul(10)).add(10);
 	if(hasUpgrade("p",12))gain=gain.mul(upgradeEffect("p",12));
@@ -132,9 +138,26 @@ function getRealPointGen() {
 	return gain
 }
 
+function getRealPointGen() {
+	let sc=Decimal.pow(2,Decimal.pow(2,29.1));
+    let gain = getRealPointGenBeforeTaxes();
+    if(gain.lte(sc))return gain;
+    gain = Decimal.pow(2,Decimal.pow(2,Decimal.sub(30,Decimal.pow(0.9,gain.log2().log2().sub(29).mul(10)))));
+	return gain
+}
+
+function getRealPointGenTaxPower() {
+	let sc=Decimal.pow(2,Decimal.pow(2,29.1));
+    let gain = getRealPointGenBeforeTaxes();
+    if(gain.lte(sc))return Decimal.dOne;
+    let gain1 = gain.log2().log2();
+    let gain2 = Decimal.sub(30,Decimal.pow(0.9,gain.log2().log2().sub(29).mul(10)));
+	return Decimal.pow(2,gain1.sub(gain2));
+}
+
 function getRealPoints() {
-    if(inChallenge("h",52))return Decimal.pow(getPointBase(),Decimal.pow(2,Decimal.pow(2,softcap(player.points,getPointSCStart(),getPointSC())).sub(1).mul(inChallenge("h",11)?2:1)));
-	return Decimal.pow(getPointBase(),Decimal.pow(2,softcap(player.points,getPointSCStart(),getPointSC()).mul(inChallenge("h",11)?2:1)));
+    if(inChallenge("h",52))return Decimal.pow(getPointBase(),Decimal.pow(2,Decimal.pow(2,softcap(player.points.max(0),getPointSCStart(),getPointSC())).sub(1).mul(inChallenge("h",11)?2:1)));
+	return Decimal.pow(getPointBase(),Decimal.pow(2,softcap(player.points.max(0),getPointSCStart(),getPointSC()).mul(inChallenge("h",11)?2:1)));
 }
 
 function setRealPoints(s){
@@ -150,7 +173,8 @@ function addedPlayerData() { return {
 var displayThings = [
 	"Mod Author: loader3229",
 	"Endgame: "+VERSION.num+" points",
-	function(){return "Point Gain: "+format(getRealPointGen())+"x"},
+	function(){if(getRealPointGen().gte(Decimal.pow(2,Decimal.pow(2,29.1))))return "Point Gain: "+format(getRealPointGen())+"x ("+format(getRealPointGenBeforeTaxes())+"x)"; return "Point Gain: "+format(getRealPointGen())+"x"},
+    function(){if(getRealPointGen().gte(Decimal.pow(2,Decimal.pow(2,29.1)))){return "<span style=color:red;>Your taxes let your point gain "+format(getRealPointGenTaxPower(),4)+"th rooted!</span>";}return "";},
 	function(){return "Progress: "+format(player.points.mul(100).div(VERSION.num))+"%"},
 ]
 
