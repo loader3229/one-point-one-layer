@@ -13,6 +13,7 @@ addLayer("p", {
     resource: "prestige points", // Name of prestige currency
     baseResource: "points", // Name of resource prestige is based on
     baseAmount() {return player.points}, // Get the current amount of baseResource
+usePoints: true,
     type: "normal", // normal: cost to gain currency depends on amount gained. static: cost depends on how much you already have
     exponent(){
         let eff=new Decimal(0);
@@ -230,6 +231,8 @@ addLayer("b", {
         resource: "boosters", // Name of prestige currency
         baseResource: "points", // Name of resource prestige is based on
         baseAmount() {return player.points}, // Get the current amount of baseResource
+usePoints: true,
+
         type: "static", // normal: cost to gain currency depends on amount gained. static: cost depends on how much you already have
         branches: ["p"],
         exponent() {
@@ -455,6 +458,8 @@ addLayer("g", {
         resource: "generators", // Name of prestige currency
         baseResource: "points", // Name of resource prestige is based on
         baseAmount() {return player.points}, // Get the current amount of baseResource
+usePoints: true,
+
         type: "static", // normal: cost to gain currency depends on amount gained. static: cost depends on how much you already have
         branches: ["p"],
         exponent() {
@@ -718,6 +723,8 @@ addLayer("t", {
         resource: "time capsules", // Name of prestige currency
         baseResource: "points", // Name of resource prestige is based on
         baseAmount() {return player.points}, // Get the current amount of baseResource
+usePoints: true,
+
         type: "static", // normal: cost to gain currency depends on amount gained. static: cost depends on how much you already have
         branches: ["b"],
         exponent() { 
@@ -1046,6 +1053,8 @@ addLayer("s", {
         resource: "space energy", // Name of prestige currency
         baseResource: "points", // Name of resource prestige is based on
         baseAmount() {return player.points}, // Get the current amount of baseResource
+usePoints: true,
+
         type: "static", // normal: cost to gain currency depends on amount gained. static: cost depends on how much you already have
         branches: ["g"],
         exponent() { 
@@ -1607,6 +1616,8 @@ addLayer("e", {
         resource: "enhance points", // Name of prestige currency
         baseResource: "points", // Name of resource prestige is based on
         baseAmount() {return player.points}, // Get the current amount of baseResource
+usePoints: true,
+
         type: "normal", // normal: cost to gain currency depends on amount gained. static: cost depends on how much you already have
         exponent(){
             if(player.ma.points.gte(6) && player.points.gte(26))return player.points.pow(player.points.sub(10).div(10).min(2)).add(player.points.sub(20).mul(5).min(100));
@@ -4439,6 +4450,8 @@ addLayer("sp", {
     resource: "super points",
     baseResource: "points",
     baseAmount() { return player.points;},
+usePoints: true,
+
     type: "normal",
     exponent(){
 	let exp=new Decimal(100);
@@ -5683,6 +5696,8 @@ addLayer("ma", {
         resource: "mastery", // Name of prestige currency
         baseResource: "points", // Name of resource prestige is based on
         baseAmount() {return player.points}, // Get the current amount of baseResource
+usePoints: true,
+
         type: "static", // normal: cost to gain currency depends on amount gained. static: cost depends on how much you already have
         exponent: new Decimal(1.11), // Prestige currency exponent
 		base: new Decimal(1.01),
