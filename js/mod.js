@@ -13,11 +13,17 @@ let modInfo = {
 
 // Set your version in num and name
 let VERSION = {
-	num: "29",
-	name: "Civilization",
+	num: "30",
+	name: "Singularity",
 }
 
 let changelog = `<h1>Changelog:</h1><br>
+	<h3>v30</h3><br>
+		- Added Singularity<br>
+                - Endgame: 30 points<br>
+	<h3>v29</h3><br>
+		- Added Civilization<br>
+                - Endgame: 29 points<br>
 	<h3>v28</h3><br>
 		- Added AI<br>
                 - Endgame: 28 points<br>
@@ -108,7 +114,12 @@ function getPointSCStart(){
     let ret=new Decimal(27);
     if(hasUpgrade("ai",11))ret = ret.add(1);
     if(hasUpgrade("ai",44))ret = ret.add(0.5);
-    if(player.c.unlocked)ret = ret.add(tmp.c.power[1].div(100));
+    if(player.c.unlocked){
+        ret = ret.add(tmp.c.power[1].min(70).div(100));
+        ret = ret.add(tmp.c.power[1].sub(120).max(0).cbrt().div(40));
+    }
+    if(hasMilestone("si",2))ret = ret.add(player.si.points.add(1).log10().div(hasMilestone("si",19)?50:100));
+    if(hasMilestone("si",11))ret = ret.add(getRealPointGenTaxPower().add(1).log10().div(50));
     return ret;
 }
 function getPointSC(){
@@ -175,7 +186,7 @@ var displayThings = [
 	"Endgame: "+VERSION.num+" points",
 	function(){if(getRealPointGen().gte(Decimal.pow(2,Decimal.pow(2,29.1))))return "Point Gain: "+format(getRealPointGen())+"x ("+format(getRealPointGenBeforeTaxes())+"x)"; return "Point Gain: "+format(getRealPointGen())+"x"},
     function(){if(getRealPointGen().gte(Decimal.pow(2,Decimal.pow(2,29.1)))){return "<span style=color:red;>Your taxes let your point gain "+format(getRealPointGenTaxPower(),4)+"th rooted!</span>";}return "";},
-	function(){return "Progress: "+format(player.points.mul(100).div(VERSION.num))+"%"},
+	function(){if(player.points.gte(30))return "You reached 30 points, now inflation are coming...";if(player.points.gte(29.9999))return "You will need additional "+format(new Decimal(30).sub(player.points),4)+" points to reach 30 points."; return "Progress: "+format(player.points.mul(100).div(VERSION.num))+"%"},
 ]
 
 // Determines when the game "ends"
