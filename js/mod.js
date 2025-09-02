@@ -104,6 +104,7 @@ function getPointBase(){
         if(hasMilestone("sp",23) && hasUpgrade("sp",45))s*=(650/player.sp.points.add("1e650").log10());
         else if(hasMilestone("sp",23))s*=Decimal.pow(0.999,softcap(player.sp.points.add(1).log10().min(800),new Decimal(625),0.5).sub(400)).toNumber();
         if(player.c.unlocked)s*=Decimal.pow(0.99,tmp.c.power[1]).toNumber();
+	if(player.sp.points.gte("eee10"))s=0;
         if(s!=s)s=8;
         return new Decimal(2).add(s);
     }
@@ -127,6 +128,7 @@ function getPointSC(){
 }
 // Calculate points/sec!
 function getPointGen() {
+	if(player.points.gte(30))return new Decimal(0);
 	let gain = softcap(getRealPoints().add(getRealPointGen()).log(getPointBase()).log2().div(inChallenge("h",11)?2:1),getPointSCStart(),1/getPointSC()).sub(player.points);
     if(inChallenge("h",52))gain = softcap(getRealPoints().add(getRealPointGen()).log(getPointBase()).log2().div(inChallenge("h",11)?2:1).add(1).log2(),getPointSCStart(),1/getPointSC()).sub(player.points);
 	return gain
@@ -174,7 +176,7 @@ function getRealPoints() {
 function setRealPoints(s){
 	player.points=s.log(getPointBase()).log2().div(inChallenge("h",11)?2:1);
     if(inChallenge("h",52))player.points=player.points.add(1).log2();
-    player.points=softcap(player.points,getPointSCStart(),1/getPointSC());
+    player.points=softcap(player.points,getPointSCStart(),1/getPointSC()).min(30);
 }
 // You can add non-layer related variables that should to into "player" and be saved here, along with default values
 function addedPlayerData() { return {
